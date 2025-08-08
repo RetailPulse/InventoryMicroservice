@@ -50,6 +50,7 @@ public class InventoryMicroserviceConfig {
             http.authorizeHttpRequests(
                     c -> c.anyRequest().permitAll()
             );
+            http.csrf(csrf -> csrf.disable());
         }
 
         http.cors(c -> {
