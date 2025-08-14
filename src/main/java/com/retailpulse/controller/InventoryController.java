@@ -1,5 +1,6 @@
 package com.retailpulse.controller;
 
+import com.retailpulse.client.BusinessEntityClient;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.service.InventoryService;
 import org.springframework.http.HttpStatus;
@@ -18,11 +19,12 @@ import java.util.logging.Logger;
 public class InventoryController {
 
     private static final Logger logger = Logger.getLogger(InventoryController.class.getName());
-
     private final InventoryService inventoryService;
+    private final BusinessEntityClient businessEntityClient;
 
-    public InventoryController(InventoryService inventoryService) {
+    public InventoryController(InventoryService inventoryService, BusinessEntityClient businessEntityClient) {
         this.inventoryService = inventoryService;
+        this.businessEntityClient = businessEntityClient;
     }
 
     @GetMapping
@@ -45,10 +47,14 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getInventoryByProductId(id));
     }
 
-    @GetMapping("/businessEntityId/{id}")
-    public ResponseEntity<List<Inventory>> getInventoryByBusinessEntityId(@PathVariable Long id) {
-        logger.info("Fetching inventory with businessEntityId: " + id);
-        return ResponseEntity.ok(inventoryService.getInventoryByBusinessEntityId(id));
+    @GetMapping("/businessEntityId/{businessEntityId}")
+    public ResponseEntity<List<Inventory>> getInventoryByBusinessEntityId(@PathVariable Long businessEntityId) {
+        logger.info("Fetching inventory with businessEntityId: " + businessEntityId);
+        if (!businessEntityClient.isValidBusinessEntity(businessEntityId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a valid business entity");
+        }
+
+        return ResponseEntity.ok(inventoryService.getInventoryByBusinessEntityId(businessEntityId));
     }
 
     @GetMapping("/productId/{productId}/businessEntityId/{businessEntityId}")
