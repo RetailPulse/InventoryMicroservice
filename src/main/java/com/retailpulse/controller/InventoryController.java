@@ -1,15 +1,12 @@
 package com.retailpulse.controller;
 
-import com.retailpulse.client.BusinessEntityClient;
-import com.retailpulse.entity.Inventory;
+import com.retailpulse.controller.response.InventoryResponseDto;
 import com.retailpulse.service.InventoryService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -20,49 +17,40 @@ public class InventoryController {
 
     private static final Logger logger = Logger.getLogger(InventoryController.class.getName());
     private final InventoryService inventoryService;
-    private final BusinessEntityClient businessEntityClient;
 
-    public InventoryController(InventoryService inventoryService, BusinessEntityClient businessEntityClient) {
+    public InventoryController(InventoryService inventoryService) {
         this.inventoryService = inventoryService;
-        this.businessEntityClient = businessEntityClient;
     }
 
     @GetMapping
-    public ResponseEntity<List<Inventory>> getAllInventories() {
+    public ResponseEntity<List<InventoryResponseDto>> getAllInventories() {
         logger.info("Fetching all inventories");
         return ResponseEntity.ok(inventoryService.getAllInventory());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Inventory> getInventoryById(@PathVariable Long id) {
+    public ResponseEntity<InventoryResponseDto> getInventoryById(@PathVariable Long id) {
         logger.info("Fetching inventory with id: " + id);
-        Inventory inventory = inventoryService.getInventoryById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Inventory not found with id: " + id));
-        return ResponseEntity.ok(inventory);
+        InventoryResponseDto response = inventoryService.getInventoryById(id);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/productId/{id}")
-    public ResponseEntity<List<Inventory>> getInventoryByProductId(@PathVariable Long id) {
+    public ResponseEntity<List<InventoryResponseDto>> getInventoryByProductId(@PathVariable Long id) {
         logger.info("Fetching inventory with productId: " + id);
         return ResponseEntity.ok(inventoryService.getInventoryByProductId(id));
     }
 
     @GetMapping("/businessEntityId/{businessEntityId}")
-    public ResponseEntity<List<Inventory>> getInventoryByBusinessEntityId(@PathVariable Long businessEntityId) {
+    public ResponseEntity<List<InventoryResponseDto>> getInventoryByBusinessEntityId(@PathVariable Long businessEntityId) {
         logger.info("Fetching inventory with businessEntityId: " + businessEntityId);
-        if (!businessEntityClient.isValidBusinessEntity(businessEntityId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a valid business entity");
-        }
-
         return ResponseEntity.ok(inventoryService.getInventoryByBusinessEntityId(businessEntityId));
     }
 
     @GetMapping("/productId/{productId}/businessEntityId/{businessEntityId}")
-    public ResponseEntity<Inventory> getInventoryByProductIdAndBusinessEntityId(@PathVariable Long productId, @PathVariable Long businessEntityId) {
+    public ResponseEntity<InventoryResponseDto> getInventoryByProductIdAndBusinessEntityId(@PathVariable Long productId, @PathVariable Long businessEntityId) {
         logger.info("Fetching inventory with businessEntityId (" + businessEntityId + ") and productId (" + productId + ")");
-        Inventory inventory = inventoryService.getInventoryByProductIdAndBusinessEntityId(productId, businessEntityId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                        "Inventory not found with productId: " + productId + " and businessEntityId: " + businessEntityId));
-        return ResponseEntity.ok(inventory);
+        InventoryResponseDto response = inventoryService.getInventoryByProductIdAndBusinessEntityId(productId, businessEntityId);
+        return ResponseEntity.ok(response);
     }
 }

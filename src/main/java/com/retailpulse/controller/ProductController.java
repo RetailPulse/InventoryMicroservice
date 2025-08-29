@@ -1,5 +1,6 @@
 package com.retailpulse.controller;
 
+import com.retailpulse.controller.response.ProductResponseDto;
 import com.retailpulse.entity.Product;
 import com.retailpulse.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,38 +25,37 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<List<ProductResponseDto>> getAllProducts() {
         logger.info("Fetching all products");
-        return ResponseEntity.ok(productService.getAllProducts());
+        List<ProductResponseDto> product = productService.getAllProducts();
+        return ResponseEntity.ok(product);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ProductResponseDto> getProductById(@PathVariable Long id) {
         logger.info("Fetching product with id: " + id);
-        Product product = productService.getProductById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not found with id: " + id));
+        ProductResponseDto product = productService.getProductById(id);
         return ResponseEntity.ok(product);
     }
 
     @GetMapping("/sku/{sku}")
-    public ResponseEntity<Product> getProductBySKU(@PathVariable String sku) {
+    public ResponseEntity<ProductResponseDto> getProductBySKU(@PathVariable String sku) {
         if (sku == null || sku.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "SKU cannot be null or empty");
         }
 
         String strSku = sku.replaceAll("[\n\r]", "_");
         logger.info("Fetching product with sku: " + strSku);
-        Product product = productService.getProductBySKU(strSku)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not found with sku: " + strSku));
+        ProductResponseDto product = productService.getProductBySKU(strSku);
         return ResponseEntity.ok(product);
     }
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+    public ResponseEntity<ProductResponseDto> createProduct(@RequestBody Product product) {
         logger.info("Received request to create product: " + product);
         try {
-            Product createdProduct = productService.saveProduct(product);
-            logger.info("Successfully created product with sku: " + createdProduct.getSku());
+            ProductResponseDto createdProduct = productService.saveProduct(product);
+            logger.info("Successfully created product with sku: " + createdProduct.sku());
             return ResponseEntity.ok(createdProduct);
         } catch (Exception e) {
             logger.severe("Error creating product: " + e.getMessage());
@@ -64,11 +64,11 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+    public ResponseEntity<ProductResponseDto> updateProduct(@PathVariable Long id, @RequestBody Product product) {
         logger.info("Received request to update product with id: " + id);
         try {
-            Product updatedProduct = productService.updateProduct(id, product);
-            logger.info("Successfully updated product with id: " + updatedProduct.getId());
+            ProductResponseDto updatedProduct = productService.updateProduct(id, product);
+            logger.info("Successfully updated product with id: " + updatedProduct.id());
             return ResponseEntity.ok(updatedProduct);
         } catch (Exception e) {
             logger.severe("Error updating product: " + e.getMessage());
@@ -84,9 +84,9 @@ public class ProductController {
     }
 
     @PutMapping("/reverseSoftDelete/{id}")
-    public ResponseEntity<Product> reverseSoftDeleteProduct(@PathVariable Long id) {
+    public ResponseEntity<ProductResponseDto> reverseSoftDeleteProduct(@PathVariable Long id) {
         logger.info("Reverse soft delete of product with id: " + id);
-        Product product = productService.reverseSoftDelete(id);
+        ProductResponseDto product = productService.reverseSoftDelete(id);
         return ResponseEntity.ok(product);
     }
 }

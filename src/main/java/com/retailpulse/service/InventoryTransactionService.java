@@ -1,18 +1,18 @@
 package com.retailpulse.service;
 
-import com.retailpulse.DTO.InventoryTransactionProductDto;
-import com.retailpulse.entity.BusinessEntity;
+import com.retailpulse.client.BusinessEntityService;
+import com.retailpulse.controller.response.InventoryResponseDto;
+import com.retailpulse.controller.response.InventoryTransactionProductResponseDto;
+import com.retailpulse.controller.response.InventoryTransactionResponseDto;
+import com.retailpulse.controller.response.ProductResponseDto;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.entity.InventoryTransaction;
-import com.retailpulse.entity.Product;
-import com.retailpulse.repository.BusinessEntityRepository;
 import com.retailpulse.repository.InventoryTransactionRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -22,24 +22,29 @@ public class InventoryTransactionService {
     private final InventoryTransactionRepository inventoryTransactionRepository;
     private final InventoryService inventoryService;
     private final ProductService productService;
-//    private final BusinessEntityRepository businessEntityRepository;
+    private final BusinessEntityService businessEntityService;
 
     @Autowired
     public InventoryTransactionService(InventoryTransactionRepository inventoryTransactionRepository,
                                        InventoryService inventoryService,
                                        ProductService productService,
-                                       BusinessEntityRepository businessEntityRepository) {
+                                       BusinessEntityService businessEntityService) {
         this.inventoryTransactionRepository = inventoryTransactionRepository;
         this.inventoryService = inventoryService;
         this.productService = productService;
-        this.businessEntityRepository = businessEntityRepository;
+        this.businessEntityService = businessEntityService;
     }
 
-    public List<InventoryTransactionProductDto> getAllInventoryTransactionWithProduct() {
-        return inventoryTransactionRepository.findAllWithProduct();
+    public List<InventoryTransactionProductResponseDto> getAllInventoryTransactionWithProduct() {
+        return inventoryTransactionRepository.findAllWithProduct().stream()
+                .map(InventoryTransactionProduct -> new InventoryTransactionProductResponseDto(
+                        InventoryTransactionProduct.inventoryTransaction(),
+                        InventoryTransactionProduct.product()
+                ))
+                .toList();
     }
 
-    public InventoryTransaction saveInventoryTransaction(@NotNull InventoryTransaction inventoryTransaction) {
+    public InventoryTransactionResponseDto saveInventoryTransaction(@NotNull InventoryTransaction inventoryTransaction) {
         validateInventoryTransactionRequestBody(inventoryTransaction);
 
         long productId = inventoryTransaction.getProductId();
@@ -48,34 +53,55 @@ public class InventoryTransactionService {
         int quantity = inventoryTransaction.getQuantity();
         double costPricePerUnit = inventoryTransaction.getCostPricePerUnit();
 
-        boolean isSourceExternal = this.isExternalBusinessEntity(sourceId);
+        final boolean isSourceExternal;
+        try {
+            isSourceExternal = this.businessEntityService.isExternalBusinessEntity(sourceId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unable to retrieve source business entity with id: " + sourceId, e);
+        }
+
         // Source External: No need to validate/deduct source inventory
         if (!isSourceExternal) {
             // Validate source inventory
-            Optional<Inventory> sourceInventory = inventoryService.getInventoryByProductIdAndBusinessEntityId(productId, sourceId);
-            if (sourceInventory.isEmpty()) {
+            InventoryResponseDto sourceInventory = inventoryService.getInventoryByProductIdAndBusinessEntityId(productId, sourceId);
+            if (sourceInventory == null) {
                 throw new IllegalArgumentException("Source inventory not found for product id: "
                         + productId + " and source id: " + sourceId);
             }
-            if (sourceInventory.get().getQuantity() < quantity) {
+            if (sourceInventory.quantity() < quantity) {
                 throw new IllegalArgumentException("Not enough quantity in source inventory for product id: "
                         + productId + " and source id: " + sourceId + ". Available: "
-                        + sourceInventory.get().getQuantity() + ", required: " + quantity);
+                        + sourceInventory.quantity() + ", required: " + quantity);
             }
-
             // Update source inventory: deduct the quantity
-            Inventory existingSourceInventory = sourceInventory.get();
-            existingSourceInventory.setQuantity(existingSourceInventory.getQuantity() - quantity);
-            existingSourceInventory.setTotalCostPrice(existingSourceInventory.getTotalCostPrice() - (costPricePerUnit * quantity));
+            Inventory existingSourceInventory = new Inventory();
+            existingSourceInventory.setId(sourceInventory.id());
+            existingSourceInventory.setProductId(sourceInventory.productId());
+            existingSourceInventory.setBusinessEntityId(sourceInventory.businessEntityId());
+            existingSourceInventory.setQuantity(sourceInventory.quantity() - quantity);
+            existingSourceInventory.setTotalCostPrice(sourceInventory.totalCostPrice() - (costPricePerUnit * quantity));
             inventoryService.updateInventory(existingSourceInventory.getId(), existingSourceInventory);
         }
 
-        boolean isDestinationExternal = this.isExternalBusinessEntity(destinationId);
+        final boolean isDestinationExternal;
+        try {
+            isDestinationExternal = this.businessEntityService.isExternalBusinessEntity(destinationId);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Unable to retrieve destination business entity with id: " + destinationId, e);
+        }
+
         // Destination External: No need to deduct destination inventory
         if (!isDestinationExternal) {
             // Update or create destination inventory
-            Optional<Inventory> destinationInventory = inventoryService.getInventoryByProductIdAndBusinessEntityId(productId, destinationId);
-            if (destinationInventory.isEmpty()) {
+            InventoryResponseDto destinationInventory;
+            try {
+                // If the underlying service throws when inventory not found, treat it as "not found"
+                destinationInventory = inventoryService.getInventoryByProductIdAndBusinessEntityId(productId, destinationId);
+            } catch (Exception e) {
+                destinationInventory = null;
+            }
+
+            if (destinationInventory == null) {
                 // Create new inventory for destination since it does not exist.
                 Inventory newDestinationInventory = new Inventory();
                 newDestinationInventory.setProductId(productId);
@@ -85,15 +111,27 @@ public class InventoryTransactionService {
                 inventoryService.saveInventory(newDestinationInventory);
             } else {
                 // Update existing destination inventory by adding the quantity.
-                Inventory existingDestinationInventory = destinationInventory.get();
-                existingDestinationInventory.setQuantity(existingDestinationInventory.getQuantity() + quantity);
-                existingDestinationInventory.setTotalCostPrice(existingDestinationInventory.getTotalCostPrice() + (costPricePerUnit * quantity));
+                Inventory existingDestinationInventory = new Inventory();
+                existingDestinationInventory.setId(destinationInventory.id());
+                existingDestinationInventory.setProductId(destinationInventory.productId());
+                existingDestinationInventory.setBusinessEntityId(destinationInventory.businessEntityId());
+                existingDestinationInventory.setQuantity(destinationInventory.quantity() + quantity);
+                existingDestinationInventory.setTotalCostPrice(destinationInventory.totalCostPrice() + (costPricePerUnit * quantity));
                 inventoryService.updateInventory(existingDestinationInventory.getId(), existingDestinationInventory);
             }
         }
 
         // Proceed with saving the transaction
-        return inventoryTransactionRepository.save(inventoryTransaction);
+        InventoryTransaction createdinventoryTransaction = inventoryTransactionRepository.save(inventoryTransaction);
+        return new InventoryTransactionResponseDto(
+                createdinventoryTransaction.getId(),
+                createdinventoryTransaction.getProductId(),
+                createdinventoryTransaction.getQuantity(),
+                createdinventoryTransaction.getCostPricePerUnit(),
+                createdinventoryTransaction.getSource(),
+                createdinventoryTransaction.getDestination(),
+                createdinventoryTransaction.getInsertedAt()
+        );
     }
     /* Some of the things to consider when creating Update/Delete method
      * Update -
@@ -131,7 +169,7 @@ public class InventoryTransactionService {
 
 
     // Helper Method
-    private InventoryTransaction updateInventoryTransaction(UUID id, InventoryTransaction inventoryTransactionDetails) {
+    public InventoryTransactionResponseDto updateInventoryTransaction(UUID id, InventoryTransaction inventoryTransactionDetails) {
         InventoryTransaction inventoryTransaction = inventoryTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Inventory not found with id: " + id));
 
@@ -140,7 +178,16 @@ public class InventoryTransactionService {
         updateField(inventoryTransactionDetails.getCostPricePerUnit(), inventoryTransaction::setCostPricePerUnit);
         updateField(inventoryTransactionDetails.getSource(), inventoryTransaction::setSource);
         updateField(inventoryTransactionDetails.getDestination(), inventoryTransaction::setDestination);
-        return inventoryTransactionRepository.save(inventoryTransaction);
+        InventoryTransaction updatedInventoryTransaction = inventoryTransactionRepository.save(inventoryTransaction);
+        return new InventoryTransactionResponseDto(
+                updatedInventoryTransaction.getId(),
+                updatedInventoryTransaction.getProductId(),
+                updatedInventoryTransaction.getQuantity(),
+                updatedInventoryTransaction.getCostPricePerUnit(),
+                updatedInventoryTransaction.getSource(),
+                updatedInventoryTransaction.getDestination(),
+                updatedInventoryTransaction.getInsertedAt()
+        );
     }
 
     // Generic helper method for updating fields
@@ -161,11 +208,8 @@ public class InventoryTransactionService {
         long destinationId = inventoryTransaction.getDestination();
 
         // Validate input Product
-        Optional<Product> product = productService.getProductById(productId);
-        if (product.isEmpty()) {
-            throw new IllegalArgumentException("Product not found for product id: " + productId);
-        }
-        if (!product.get().isActive()) {
+        ProductResponseDto product = productService.getProductById(productId);
+        if (!product.active()) {
             throw new IllegalArgumentException("Product deleted for product id: " + productId);
         }
         // Validate input source & destination

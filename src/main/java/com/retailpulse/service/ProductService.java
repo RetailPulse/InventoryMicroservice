@@ -1,18 +1,24 @@
 package com.retailpulse.service;
 
+import com.retailpulse.controller.response.ProductResponseDto;
 import com.retailpulse.entity.Product;
 import com.retailpulse.repository.ProductRepository;
+import com.retailpulse.service.exception.BusinessException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 @Service
 public class ProductService {
+
+    private static final String PRODUCT_BY_ID_NOT_FOUND = "PRODUCT_BY_ID_NOT_FOUND";
+    private static final String PRODUCT_BY_SKU_NOT_FOUND = "PRODUCT_BY_SKU_NOT_FOUND";
+    private static final String PRODUCT_BY_ID_NOT_FOUND_DESC = "Product by Id not found with id: ";
+    private static final String PRODUCT_BY_SKU_NOT_FOUND_DESC = "Product by SKU not found with id: ";
 
     private static final String PRODUCT_NOT_FOUND_DESC = "Product not found with id: ";
 
@@ -27,30 +33,91 @@ public class ProductService {
         this.inventoryService = inventoryService;
     }
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductResponseDto> getAllProducts() {
+        return productRepository.findAll().stream()
+                .map(product -> new ProductResponseDto(
+                        product.getId(),
+                        product.getSku(),
+                        product.getDescription(),
+                        product.getCategory(),
+                        product.getSubcategory(),
+                        product.getBrand(),
+                        product.getOrigin(),
+                        product.getUom(),
+                        product.getVendorCode(),
+                        product.getBarcode(),
+                        product.getRrp(),
+                        product.isActive()
+                ))
+                .toList();
     }
 
-    public Optional<Product> getProductById(Long id) {
-        return productRepository.findById(id);
+    public ProductResponseDto getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(PRODUCT_BY_ID_NOT_FOUND, PRODUCT_BY_ID_NOT_FOUND_DESC + id));
+
+        return new ProductResponseDto(
+                product.getId(),
+                product.getSku(),
+                product.getDescription(),
+                product.getCategory(),
+                product.getSubcategory(),
+                product.getBrand(),
+                product.getOrigin(),
+                product.getUom(),
+                product.getVendorCode(),
+                product.getBarcode(),
+                product.getRrp(),
+                product.isActive()
+        );
     }
 
-    public Optional<Product> getProductBySKU(String sku) {
-        return productRepository.findBySku(sku);
+    public ProductResponseDto getProductBySKU(String sku) {
+        Product product = productRepository.findBySku(sku)
+                .orElseThrow(() -> new BusinessException(PRODUCT_BY_SKU_NOT_FOUND, PRODUCT_BY_SKU_NOT_FOUND_DESC + sku));
+
+        return new ProductResponseDto(
+                product.getId(),
+                product.getSku(),
+                product.getDescription(),
+                product.getCategory(),
+                product.getSubcategory(),
+                product.getBrand(),
+                product.getOrigin(),
+                product.getUom(),
+                product.getVendorCode(),
+                product.getBarcode(),
+                product.getRrp(),
+                product.isActive()
+        );
     }
 
     @Transactional
-    public Product saveProduct(@NotNull Product product) {
+    public ProductResponseDto saveProduct(@NotNull Product product) {
         if (product.getRrp() < 0) {
             throw new IllegalArgumentException("Recommended retail price cannot be negative");
         }
         // Generate SKU before saving
         String generatedSKU = skuGeneratorService.generateSKU();
         product.setSku(generatedSKU);
-        return productRepository.save(product);
+        Product createdProduct = productRepository.save(product);
+        return new ProductResponseDto(
+                createdProduct.getId(),
+                createdProduct.getSku(),
+                createdProduct.getDescription(),
+                createdProduct.getCategory(),
+                createdProduct.getSubcategory(),
+                createdProduct.getBrand(),
+                createdProduct.getOrigin(),
+                createdProduct.getUom(),
+                createdProduct.getVendorCode(),
+                createdProduct.getBarcode(),
+                createdProduct.getRrp(),
+                createdProduct.isActive()
+        );
     }
 
-    public Product updateProduct(Long id, Product productDetails) {
+    public ProductResponseDto updateProduct(Long id, Product productDetails) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_DESC + id));
 
@@ -73,12 +140,26 @@ public class ProductService {
         // Do not update isActive field, this is used for soft delete
         // product.setIsActive(productDetails.isActive());
 
-        return productRepository.save(product);
+        Product updatedProduct = productRepository.save(product);
+        return new ProductResponseDto(
+                updatedProduct.getId(),
+                updatedProduct.getSku(),
+                updatedProduct.getDescription(),
+                updatedProduct.getCategory(),
+                updatedProduct.getSubcategory(),
+                updatedProduct.getBrand(),
+                updatedProduct.getOrigin(),
+                updatedProduct.getUom(),
+                updatedProduct.getVendorCode(),
+                updatedProduct.getBarcode(),
+                updatedProduct.getRrp(),
+                updatedProduct.isActive()
+        );
     }
 
     // Generic helper method for updating fields
     private <T> void updateField(T newValue, Consumer<T> updater) {
-        if(newValue == null) {
+        if (newValue == null) {
             return;
         }
         if (newValue instanceof String && ((String) newValue).isEmpty()) {
@@ -102,13 +183,27 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public Product reverseSoftDelete(Long id) {
+    public ProductResponseDto reverseSoftDelete(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_DESC + id));
 
         updateField(true, product::setActive);
 
-        return productRepository.save(product);
+        Product updatedProduct = productRepository.save(product);
+        return new ProductResponseDto(
+                updatedProduct.getId(),
+                updatedProduct.getSku(),
+                updatedProduct.getDescription(),
+                updatedProduct.getCategory(),
+                updatedProduct.getSubcategory(),
+                updatedProduct.getBrand(),
+                updatedProduct.getOrigin(),
+                updatedProduct.getUom(),
+                updatedProduct.getVendorCode(),
+                updatedProduct.getBarcode(),
+                updatedProduct.getRrp(),
+                updatedProduct.isActive()
+        );
     }
 
 }

@@ -1,31 +1,12 @@
 package com.retailpulse.client;
 
 import com.retailpulse.client.DTO.BusinessEntityResponseDto;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
-@Component
-public class BusinessEntityClient {
-    private final RestTemplate restTemplate;
-    private final String BusinessEntityURL = "http://localhost:8085/api/businessEntity";
-
-    public BusinessEntityClient(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
-
-    public boolean isValidBusinessEntity(Long businessEntityId) {
-        String url = BusinessEntityURL + "/{businessEntityId}";
-        try {
-            BusinessEntityResponseDto response = restTemplate.getForObject(url, BusinessEntityResponseDto.class, businessEntityId);
-            return response != null;
-        } catch (HttpClientErrorException e) {
-            if (e.getStatusCode().value() == 400) {
-                return false;
-            }
-            throw e; // rethrow other errors
-        } catch (Exception e) {
-            return false;
-        }
-    }
+@FeignClient(name = "business-entity", url = "http://localhost:8085")
+public interface BusinessEntityClient {
+    @GetMapping("/api/businessEntity/{businessEntityId}")
+    BusinessEntityResponseDto getBusinessEntity(@PathVariable("businessEntityId") Long businessEntityId);
 }
