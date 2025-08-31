@@ -1,6 +1,6 @@
 package com.retailpulse.controller;
 
-import com.retailpulse.controller.response.ProductResponseDto;
+import com.retailpulse.dto.response.ProductResponseDto;
 import com.retailpulse.entity.Product;
 import com.retailpulse.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;

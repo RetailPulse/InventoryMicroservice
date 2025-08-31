@@ -1,7 +1,7 @@
 package com.retailpulse.service;
 
 import com.retailpulse.client.BusinessEntityService;
-import com.retailpulse.controller.response.InventoryResponseDto;
+import com.retailpulse.dto.response.InventoryResponseDto;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.repository.InventoryRepository;
 import com.retailpulse.service.exception.BusinessException;

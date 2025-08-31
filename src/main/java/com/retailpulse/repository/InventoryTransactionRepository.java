@@ -1,6 +1,6 @@
 package com.retailpulse.repository;
 
-import com.retailpulse.controller.response.InventoryTransactionProductResponseDto;
+import com.retailpulse.dto.response.InventoryTransactionProductResponseDto;
 import com.retailpulse.entity.InventoryTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

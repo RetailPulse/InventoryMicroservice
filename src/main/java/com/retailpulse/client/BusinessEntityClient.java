@@ -1,6 +1,6 @@
 package com.retailpulse.client;
 
-import com.retailpulse.client.DTO.BusinessEntityResponseDto;
+import com.retailpulse.dto.response.BusinessEntityResponseDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

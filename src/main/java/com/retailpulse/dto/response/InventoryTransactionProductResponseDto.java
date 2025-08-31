@@ -1,4 +1,4 @@
-package com.retailpulse.controller.response;
+package com.retailpulse.dto.response;
 
 import com.retailpulse.entity.InventoryTransaction;
 import com.retailpulse.entity.Product;

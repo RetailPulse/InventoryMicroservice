@@ -1,4 +1,4 @@
-package com.retailpulse.DTO;
+package com.retailpulse.dto;
 
 public class InventoryTransactionDetailsDto {
 }

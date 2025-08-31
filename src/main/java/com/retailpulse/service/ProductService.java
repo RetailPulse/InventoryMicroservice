@@ -1,6 +1,6 @@
 package com.retailpulse.service;
 
-import com.retailpulse.controller.response.ProductResponseDto;
+import com.retailpulse.dto.response.ProductResponseDto;
 import com.retailpulse.entity.Product;
 import com.retailpulse.repository.ProductRepository;
 import com.retailpulse.service.exception.BusinessException;

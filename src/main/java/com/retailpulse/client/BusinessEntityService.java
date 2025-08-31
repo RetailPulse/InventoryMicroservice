@@ -1,6 +1,6 @@
 package com.retailpulse.client;
 
-import com.retailpulse.client.DTO.BusinessEntityResponseDto;
+import com.retailpulse.dto.response.BusinessEntityResponseDto;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

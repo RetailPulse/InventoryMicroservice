@@ -1,10 +1,10 @@
 package com.retailpulse.service;
 
 import com.retailpulse.client.BusinessEntityService;
-import com.retailpulse.controller.response.InventoryResponseDto;
-import com.retailpulse.controller.response.InventoryTransactionProductResponseDto;
-import com.retailpulse.controller.response.InventoryTransactionResponseDto;
-import com.retailpulse.controller.response.ProductResponseDto;
+import com.retailpulse.dto.response.InventoryResponseDto;
+import com.retailpulse.dto.response.InventoryTransactionProductResponseDto;
+import com.retailpulse.dto.response.InventoryTransactionResponseDto;
+import com.retailpulse.dto.response.ProductResponseDto;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.entity.InventoryTransaction;
 import com.retailpulse.repository.InventoryTransactionRepository;
