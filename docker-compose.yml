@@ -1,16 +1,16 @@
 services:
   mysql:
     image: mysql:latest
-    container_name: mysql-rp
+    container_name: mysql-rp-inventory
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: RetailPulseDB
+      MYSQL_DATABASE: RPInventoryDB
     ports:
-      - "3307:3306"
+      - "3316:3306"
     volumes:
-      - ./deploy/backend.init.sql:/docker-entrypoint-initdb.d/init.sql
-      - mysql_backend_vol:/var/lib/mysql
+      - ./deploy/inventory.init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_inventory_vol:/var/lib/mysql
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 30s
@@ -20,29 +20,32 @@ services:
     networks:
       - retailpulse-network
 
-  app:
-    image: rp-server
-    container_name: app-rp
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-rp:3306/RetailPulseDB
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: password
-      SERVER_PORT: 8085
-      AUTH_SERVER_URL: http://app-iam:8081
-    ports:
-      - "8085:8085"
-    depends_on:
-      mysql-rp:
-        condition: service_healthy
-      app-iam:
-        condition: service_started
-    networks:
-      - retailpulse-network
+  # app:
+  #   image: rp-server
+  #   container_name: app-rp
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql-rp:3306/RetailPulseDB
+  #     SPRING_DATASOURCE_USERNAME: root
+  #     SPRING_DATASOURCE_PASSWORD: password
+  #     SERVER_PORT: 8085
+  #     AUTH_SERVER_URL: http://app-iam:8081
+  #   ports:
+  #     - "8085:8085"
+  #   depends_on:
+  #     mysql-rp:
+  #       condition: service_healthy
+  #     app-iam:
+  #       condition: service_started
+  #   networks:
+  #     - retailpulse-network
 
 networks:
   retailpulse-network:
     driver: bridge
+
+volumes:
+  mysql_inventory_vol:
 

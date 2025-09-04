@@ -37,7 +37,7 @@ public class BusinessEntityService {
                 log.warn("Business entity {} not found (null response)", businessEntityId);
                 throw new IllegalArgumentException("Business entity not found with id: " + businessEntityId);
             }
-            return Boolean.TRUE.equals(response.external());
+            return response.external();
         } catch (Exception e) {
             log.error("Failed to fetch business entity {}: {}", businessEntityId, e.getMessage(), e);
             throw new IllegalStateException("Unable to fetch business entity with id: " + businessEntityId, e);

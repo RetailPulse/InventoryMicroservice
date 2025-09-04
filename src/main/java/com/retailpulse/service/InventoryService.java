@@ -84,7 +84,7 @@ public class InventoryService {
 
     }
 
-    public InventoryResponseDto getInventoryByProductIdAndBusinessEntityId(Long productId, Long businessEntityId) {
+     public InventoryResponseDto getInventoryByProductIdAndBusinessEntityId(Long productId, Long businessEntityId) {
         if (businessEntityService.isInvalidBusinessEntity(businessEntityId)) {
             throw new BusinessException(INVALID_BUSINESS_ENTITY, INVALID_BUSINESS_ENTITY_DESC + businessEntityId);
         }

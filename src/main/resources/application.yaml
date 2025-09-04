@@ -7,7 +7,7 @@ auth:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3307/RetailPulseDB
+    url: jdbc:mysql://localhost:3316/RPInventoryDB
     username: root
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -26,4 +26,4 @@ logging:
         security: TRACE
     com.retailpulse: DEBUG
   file:
-    name: logs/retailpulse.log
+    name: logs/rp-inventory.log
