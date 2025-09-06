@@ -1,7 +1,6 @@
 package com.retailpulse.service;
 
-import com.retailpulse.client.BusinessEntityService;
-import com.retailpulse.controller.response.InventoryResponseDto;
+import com.retailpulse.dto.response.InventoryResponseDto;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.repository.InventoryRepository;
 import com.retailpulse.service.exception.BusinessException;
@@ -69,7 +68,7 @@ public class InventoryService {
     }
 
     public List<InventoryResponseDto> getInventoryByBusinessEntityId(Long businessEntityId) {
-        if (businessEntityService.isInvalidBusinessEntity(businessEntityId)) {
+        if (!businessEntityService.isValidBusinessEntity(businessEntityId)) {
             throw new BusinessException(INVALID_BUSINESS_ENTITY, INVALID_BUSINESS_ENTITY_DESC + businessEntityId);
         }
 
@@ -85,8 +84,8 @@ public class InventoryService {
 
     }
 
-    public InventoryResponseDto getInventoryByProductIdAndBusinessEntityId(Long productId, Long businessEntityId) {
-        if (businessEntityService.isInvalidBusinessEntity(businessEntityId)) {
+     public InventoryResponseDto getInventoryByProductIdAndBusinessEntityId(Long productId, Long businessEntityId) {
+        if (!businessEntityService.isValidBusinessEntity(businessEntityId)) {
             throw new BusinessException(INVALID_BUSINESS_ENTITY, INVALID_BUSINESS_ENTITY_DESC + businessEntityId);
         }
 

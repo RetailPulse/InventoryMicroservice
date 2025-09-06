@@ -1,4 +1,4 @@
-package com.retailpulse.controller.response;
+package com.retailpulse.dto.response;
 
 import java.time.Instant;
 import java.util.UUID;

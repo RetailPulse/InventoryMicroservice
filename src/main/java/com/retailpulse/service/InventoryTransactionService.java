@@ -1,10 +1,9 @@
 package com.retailpulse.service;
 
-import com.retailpulse.client.BusinessEntityService;
-import com.retailpulse.controller.response.InventoryResponseDto;
-import com.retailpulse.controller.response.InventoryTransactionProductResponseDto;
-import com.retailpulse.controller.response.InventoryTransactionResponseDto;
-import com.retailpulse.controller.response.ProductResponseDto;
+import com.retailpulse.dto.response.InventoryResponseDto;
+import com.retailpulse.dto.response.InventoryTransactionProductResponseDto;
+import com.retailpulse.dto.response.InventoryTransactionResponseDto;
+import com.retailpulse.dto.response.ProductResponseDto;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.entity.InventoryTransaction;
 import com.retailpulse.repository.InventoryTransactionRepository;
@@ -133,40 +132,6 @@ public class InventoryTransactionService {
                 createdinventoryTransaction.getInsertedAt()
         );
     }
-    /* Some of the things to consider when creating Update/Delete method
-     * Update -
-     * If Product can be updated
-     * * Need to add original Product to source inventory
-     * If source can be updated
-     * * Need to add Product back to original source inventory
-     * If destination can be updated
-     * * Need to minus Product from original destination inventory
-     * If quantity can be updated
-     * * If source same then need see the difference; if positive or negative;
-     *
-     *
-     * Example Note:
-     *
-     * 1. If Original ProductId = Updated ProductId
-     * * 1.1 Original Source = Updated Source
-     * * * 1.1.1 If quantity > updatedQuantity -> Need to add back to source
-     * * * 1.1.2 If quantity < updatedQuantity -> Need to minus
-     * * 1.2 Original Source != Updated Source
-     * * * 1.2.1 Add back inventory to original source; Minus inventory from updated source
-     *
-     * 2. If Original ProductId != Updated ProductId
-     * * 2.1 Original Source = Updated Source
-     * * * 2.1.1 Add back inventory of original ProductId to source
-     * * * 2.1.2 If updatedQuantity
-     */
-
-    // todo - To plan how to implement this logic in Inventory
-//    private boolean isExternalBusinessEntity(Long id) {
-//        BusinessEntity businessEntity = businessEntityRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Business Entity not found with id: " + id));
-//        return businessEntity.isExternal();
-//    }
-
 
     // Helper Method
     public InventoryTransactionResponseDto updateInventoryTransaction(UUID id, InventoryTransaction inventoryTransactionDetails) {
@@ -204,14 +169,20 @@ public class InventoryTransactionService {
     // Validation Method
     private void validateInventoryTransactionRequestBody(@NotNull InventoryTransaction inventoryTransaction) {
         long productId = inventoryTransaction.getProductId();
-        long sourceId = inventoryTransaction.getSource();
-        long destinationId = inventoryTransaction.getDestination();
-
+        
         // Validate input Product
         ProductResponseDto product = productService.getProductById(productId);
+        if (product == null) {
+            throw new IllegalArgumentException("Product not found for product id: " + productId);
+        }
+
         if (!product.active()) {
             throw new IllegalArgumentException("Product deleted for product id: " + productId);
         }
+
+        long sourceId = inventoryTransaction.getSource();
+        long destinationId = inventoryTransaction.getDestination();
+        
         // Validate input source & destination
         if (sourceId == destinationId) {
             throw new IllegalArgumentException("Source and Destination cannot be the same");

@@ -1,7 +1,7 @@
 package com.retailpulse.controller;
 
-import com.retailpulse.controller.response.InventoryTransactionProductResponseDto;
-import com.retailpulse.controller.response.InventoryTransactionResponseDto;
+import com.retailpulse.dto.response.InventoryTransactionProductResponseDto;
+import com.retailpulse.dto.response.InventoryTransactionResponseDto;
 import com.retailpulse.entity.InventoryTransaction;
 import com.retailpulse.service.InventoryTransactionService;
 import org.springframework.beans.factory.annotation.Autowired;

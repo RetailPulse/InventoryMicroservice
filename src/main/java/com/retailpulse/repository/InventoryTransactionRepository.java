@@ -1,6 +1,6 @@
 package com.retailpulse.repository;
 
-import com.retailpulse.controller.response.InventoryTransactionProductResponseDto;
+import com.retailpulse.dto.response.InventoryTransactionProductResponseDto;
 import com.retailpulse.entity.InventoryTransaction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +12,7 @@ import java.util.UUID;
 @Repository
 public interface InventoryTransactionRepository extends JpaRepository<InventoryTransaction, UUID> {
 
-    @Query("SELECT new com.retailpulse.controller.response.InventoryTransactionProductResponseDto(it, p) FROM InventoryTransaction it JOIN Product p ON it.productId = p.id")
+    @Query("SELECT new com.retailpulse.dto.response.InventoryTransactionProductResponseDto(it, p) FROM InventoryTransaction it JOIN Product p ON it.productId = p.id")
     List<InventoryTransactionProductResponseDto> findAllWithProduct();
 
     // Todo: Implement in controller

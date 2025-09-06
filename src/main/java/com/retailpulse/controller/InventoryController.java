@@ -1,6 +1,6 @@
 package com.retailpulse.controller;
 
-import com.retailpulse.controller.response.InventoryResponseDto;
+import com.retailpulse.dto.response.InventoryResponseDto;
 import com.retailpulse.service.InventoryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

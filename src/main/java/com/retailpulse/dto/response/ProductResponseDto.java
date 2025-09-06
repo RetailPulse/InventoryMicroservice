@@ -1,4 +1,4 @@
-package com.retailpulse.controller.response;
+package com.retailpulse.dto.response;
 
 public record ProductResponseDto(Long id,
                                  String sku,
