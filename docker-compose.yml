@@ -1,5 +1,5 @@
 services:
-  mysql:
+  mysql-rp-inventory:
     image: mysql:latest
     container_name: mysql-rp-inventory
     restart: always
@@ -20,27 +20,27 @@ services:
     networks:
       - retailpulse-network
 
-  # app:
-  #   image: rp-server
-  #   container_name: app-rp
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql-rp:3306/RetailPulseDB
-  #     SPRING_DATASOURCE_USERNAME: root
-  #     SPRING_DATASOURCE_PASSWORD: password
-  #     SERVER_PORT: 8085
-  #     AUTH_SERVER_URL: http://app-iam:8081
-  #   ports:
-  #     - "8085:8085"
-  #   depends_on:
-  #     mysql-rp:
-  #       condition: service_healthy
-  #     app-iam:
-  #       condition: service_started
-  #   networks:
-  #     - retailpulse-network
+  app:
+    image: rp-inventory-app:v0.1.0
+    container_name: app-rp-inventory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-rp-inventory:3306/RPInventoryDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+      SERVER_PORT: 8085
+      AUTH_SERVER_URL: http://app-iam:8081
+    ports:
+      - "8085:8085"
+    depends_on:
+      mysql-rp-inventory:
+        condition: service_healthy
+      # app-iam:
+      #   condition: service_started
+    networks:
+      - retailpulse-network
 
 networks:
   retailpulse-network:

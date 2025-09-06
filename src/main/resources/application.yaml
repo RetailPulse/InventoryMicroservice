@@ -18,6 +18,10 @@ spring:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
 
+businessentity-service:
+    url: http://localhost:30082
+    timeout: 5000
+    
 logging:
   level:
     root: INFO
