@@ -137,7 +137,7 @@ class InventoryServiceTest {
 
         List<Inventory> mockInventories = Collections.singletonList(mockInventory);
 
-        when(businessEntityService.isInvalidBusinessEntity(businessEntityId)).thenReturn(false);
+        when(businessEntityService.isValidBusinessEntity(businessEntityId)).thenReturn(true);
         when(inventoryRepository.findByBusinessEntityId(businessEntityId)).thenReturn(mockInventories);
 
         // Act
@@ -168,6 +168,7 @@ class InventoryServiceTest {
 
         when(inventoryRepository.findByProductIdAndBusinessEntityId(productId, businessEntityId))
                 .thenReturn(Optional.of(mockInventory));
+        when(businessEntityService.isValidBusinessEntity(businessEntityId)).thenReturn(true);
 
         // Act
         InventoryResponseDto result = inventoryService.getInventoryByProductIdAndBusinessEntityId(productId, businessEntityId);

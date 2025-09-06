@@ -28,6 +28,9 @@ data:
           ddl-auto: update
         database-platform: org.hibernate.dialect.MySQL8Dialect
         show-sql: true
+    
+    businessentity-service:
+      url: http://svc-rp-businessentity:8082
 
     logging:
       level:
@@ -63,7 +66,7 @@ spec:
         name: myapp        
         volumeMounts:
         - name: config-volume
-          mountPath: /app/config/application.yaml
+          mountPath: /app/config
         resources: {}
       volumes:
       - name: config-volume
