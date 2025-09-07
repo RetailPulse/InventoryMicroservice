@@ -42,6 +42,15 @@ services:
   #   networks:
   #     - retailpulse-network
 
+  redis:
+    image: redis:7
+    container_name: redis-rp-inventory
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - retailpulse-network
+
 networks:
   retailpulse-network:
     driver: bridge

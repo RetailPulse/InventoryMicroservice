@@ -6,6 +6,10 @@ auth:
   jwt.key.set.uri: http://app-iam:8081/oauth2/jwks
 
 spring:
+  redis:
+    host: localhost
+    port: 6379
+
   datasource:
     url: jdbc:mysql://localhost:3316/RPInventoryDB
     username: root
