@@ -37,7 +37,7 @@ data:
         root: INFO
         org:
           springframework:
-            security: TRACE
+            security: INFO
         com.retailpulse: DEBUG
       file:
         name: logs/rp-inventory.log
@@ -63,7 +63,8 @@ spec:
     spec:
       containers:
       - image: docker.io/casperyap/rp-inventory-app:v0.1.0
-        name: myapp        
+#      - image: rp-inventory-service:v0.1.0
+        name: myapp
         volumeMounts:
         - name: config-volume
           mountPath: /app/config
@@ -81,6 +82,7 @@ metadata:
   labels:
     app: deploy-rp-inventory
   name: svc-rp-inventory
+  namespace: ns-retailpulse
 spec:
   ports:
   - port: 8085
