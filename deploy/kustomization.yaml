@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ns-retailpulse
+resources:
+  - namespace.yaml
+  - deploy-rp-inventory-sql.yaml
+  - deploy-rp-inventory-redis.yaml
+  - deploy-rp-inventory-app.yaml

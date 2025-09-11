@@ -18,12 +18,12 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
 
 businessentity-service:
-    url: http://localhost:30082
+  url: http://localhost:30082
     
 logging:
   level:
