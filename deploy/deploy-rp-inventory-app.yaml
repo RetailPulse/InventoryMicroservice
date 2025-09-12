@@ -6,7 +6,7 @@ metadata:
 data:
   application.yaml: |
     server:
-      port: 8085
+      port: 8084
 
     auth:
       enabled: false
@@ -82,11 +82,11 @@ metadata:
     app: deploy-rp-inventory
   name: svc-rp-inventory
 spec:
-  ports:
-  - port: 8085
-    protocol: TCP
-    targetPort: 8085
-    nodePort: 30085
   selector:
     app: deploy-rp-inventory
+  ports:
+  - port: 8084
+    protocol: TCP
+    targetPort: 8084
+    nodePort: 30084
   type: NodePort
