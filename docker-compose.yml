@@ -20,7 +20,7 @@ services:
     networks:
       - retailpulse-network
 
-  # app:
+  # rp-inventory-app:
   #   image: rp-inventory-app:v0.1.0
   #   container_name: app-rp-inventory
   #   build:

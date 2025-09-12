@@ -30,7 +30,7 @@ logging:
     root: INFO
     org:
       springframework:
-        security: TRACE
+        security: INFO
     com.retailpulse: DEBUG
   file:
     name: logs/rp-inventory.log
