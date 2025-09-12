@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-redis
+  namespace: ns-retailpulse
+type: Opaque
+stringData:
+  REDIS_PASSWORD: "redis-password-inventory"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-rp-inventory
+  namespace: ns-retailpulse
+  labels:
+    app: redis-rp-inventory
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-rp-inventory
+  template:
+    metadata:
+      labels:
+        app: redis-rp-inventory
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.2
+          ports:
+            - containerPort: 6379
+          args: ["--requirepass", "$(REDIS_PASSWORD)"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-redis
+                  key: REDIS_PASSWORD
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 10
+            periodSeconds: 20
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-rp-inventory
+  namespace: ns-retailpulse
+  labels:
+    app: redis-rp-inventory
+spec:
+  selector:
+    app: redis-rp-inventory
+  ports:
+    - port: 6379
+      targetPort: 6379
+  type: ClusterIP

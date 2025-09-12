@@ -6,6 +6,10 @@ auth:
   jwt.key.set.uri: http://app-iam:8081/oauth2/jwks
 
 spring:
+  redis:
+    host: localhost
+    port: 6379
+
   datasource:
     url: jdbc:mysql://localhost:3307/RetailPulseDB
     username: root
@@ -14,9 +18,12 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+
+businessentity-service:
+  url: http://localhost:30082
 
 logging:
   level:
