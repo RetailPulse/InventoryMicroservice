@@ -72,7 +72,7 @@ spec:
         app: deploy-rp-inventory
     spec:
       containers:
-      - image: docker.io/galvinlwy/rp-inventory-app-local:v0.1.0
+      - image: docker.io/casperyap/rp-inventory-app:v0.1.0
         name: myapp
         env:
           - name: REDIS_PASSWORD
