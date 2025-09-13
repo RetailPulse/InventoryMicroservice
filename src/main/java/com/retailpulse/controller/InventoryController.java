@@ -1,15 +1,19 @@
 package com.retailpulse.controller;
 
+import com.retailpulse.dto.request.InventoryUpdateRequestDto;
 import com.retailpulse.dto.response.InventoryResponseDto;
 import com.retailpulse.service.InventoryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.logging.Logger;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/inventory")
@@ -53,4 +57,13 @@ public class InventoryController {
         InventoryResponseDto response = inventoryService.getInventoryByProductIdAndBusinessEntityId(productId, businessEntityId);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/salesUpdate")
+    public ResponseEntity<Void> salesUpdateStocks(@Valid @RequestBody InventoryUpdateRequestDto request)
+    {
+        logger.info("Deducting inventories with businessEntityId (" + request.businessEntityId() + ")");
+        inventoryService.salesUpdateStocks(request);
+        
+        return ResponseEntity.ok().build();
+    }    
 }

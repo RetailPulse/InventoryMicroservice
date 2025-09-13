@@ -29,18 +29,28 @@ data:
         database-platform: org.hibernate.dialect.MySQL8Dialect
         show-sql: true
     
-    businessentity-service:
-      url: http://svc-rp-businessentity:8082
+      cache:
+          type: redis
+  
+      data:
+        redis:
+          host: redis-rp-inventory
+          port: 6379
+          password: ${REDIS_PASSWORD}
+          timeout: 60000
 
     logging:
       level:
         root: INFO
         org:
           springframework:
-            security: TRACE
+            security: INFO
         com.retailpulse: DEBUG
       file:
         name: logs/rp-inventory.log
+    
+    businessentity-service:
+      url: http://svc-rp-businessentity:8082
 
 ---
 
@@ -63,7 +73,13 @@ spec:
     spec:
       containers:
       - image: docker.io/casperyap/rp-inventory-app:v0.1.0
-        name: myapp        
+        name: myapp
+        env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: secret-redis
+                key: REDIS_PASSWORD
         volumeMounts:
         - name: config-volume
           mountPath: /app/config
@@ -81,6 +97,7 @@ metadata:
   labels:
     app: deploy-rp-inventory
   name: svc-rp-inventory
+  namespace: ns-retailpulse
 spec:
   selector:
     app: deploy-rp-inventory
