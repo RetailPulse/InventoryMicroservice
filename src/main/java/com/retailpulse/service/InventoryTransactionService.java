@@ -10,6 +10,8 @@ import com.retailpulse.repository.InventoryTransactionRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +36,7 @@ public class InventoryTransactionService {
         this.businessEntityService = businessEntityService;
     }
 
+    @Cacheable(value = "inventoryTransactionProductList", key = "'all'", sync = true)
     public List<InventoryTransactionProductResponseDto> getAllInventoryTransactionWithProduct() {
         return inventoryTransactionRepository.findAllWithProduct().stream()
                 .map(InventoryTransactionProduct -> new InventoryTransactionProductResponseDto(
@@ -43,6 +46,7 @@ public class InventoryTransactionService {
                 .toList();
     }
 
+    @CacheEvict(value = {"inventoryTransactionProductList", "inventoryTransactionList"}, allEntries = true)
     public InventoryTransactionResponseDto saveInventoryTransaction(@NotNull InventoryTransaction inventoryTransaction) {
         validateInventoryTransactionRequestBody(inventoryTransaction);
 
@@ -134,6 +138,7 @@ public class InventoryTransactionService {
     }
 
     // Helper Method
+    @CacheEvict(value = {"inventoryTransactionProductList", "inventoryTransactionList"}, allEntries = true)
     public InventoryTransactionResponseDto updateInventoryTransaction(UUID id, InventoryTransaction inventoryTransactionDetails) {
         InventoryTransaction inventoryTransaction = inventoryTransactionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Inventory not found with id: " + id));

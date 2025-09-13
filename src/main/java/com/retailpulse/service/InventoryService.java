@@ -6,6 +6,8 @@ import com.retailpulse.repository.InventoryRepository;
 import com.retailpulse.service.exception.BusinessException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +32,7 @@ public class InventoryService {
         this.businessEntityService = businessEntityService;
     }
 
+    @Cacheable(value = "inventoryList", key = "'all'", sync = true)
     public List<InventoryResponseDto> getAllInventory() {
         return inventoryRepository.findAll().stream()
                 .map(inventoryEntity -> new InventoryResponseDto(
@@ -42,6 +45,7 @@ public class InventoryService {
                 .toList();
     }
 
+    @Cacheable(value = "inventory", key = "#id", sync = true)
     public InventoryResponseDto getInventoryById(Long id) {
         Inventory inventory = inventoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(INVENTORY_NOT_FOUND, INVENTORY_NOT_FOUND_DESC + id));
@@ -55,6 +59,7 @@ public class InventoryService {
         );
     }
 
+    @Cacheable(value = "inventoryList", key = "'byProduct:' + #productId", sync = true)
     public List<InventoryResponseDto> getInventoryByProductId(Long productId) {
         return inventoryRepository.findByProductId(productId).stream()
                 .map(inventoryEntity -> new InventoryResponseDto(
@@ -67,6 +72,7 @@ public class InventoryService {
                 .toList();
     }
 
+    @Cacheable(value = "inventoryList", key = "'byBE:' + #businessEntityId", sync = true)
     public List<InventoryResponseDto> getInventoryByBusinessEntityId(Long businessEntityId) {
         if (!businessEntityService.isValidBusinessEntity(businessEntityId)) {
             throw new BusinessException(INVALID_BUSINESS_ENTITY, INVALID_BUSINESS_ENTITY_DESC + businessEntityId);
@@ -84,6 +90,7 @@ public class InventoryService {
 
     }
 
+    @Cacheable(value = "inventory", key = "'byProductAndBE:' + #productId + ':' + #businessEntityId", sync = true)
      public InventoryResponseDto getInventoryByProductIdAndBusinessEntityId(Long productId, Long businessEntityId) {
         if (!businessEntityService.isValidBusinessEntity(businessEntityId)) {
             throw new BusinessException(INVALID_BUSINESS_ENTITY, INVALID_BUSINESS_ENTITY_DESC + businessEntityId);
@@ -108,11 +115,13 @@ public class InventoryService {
     }
 
     // Not exposed in controller - Inventory should only be changed by Inventory Summary
+    @CacheEvict(value = {"inventory", "inventoryList"}, allEntries = true)
     public Inventory saveInventory(Inventory inventory) {
         return inventoryRepository.save(inventory);
     }
 
     // Not exposed in controller - Inventory should only be changed by Inventory Summary
+    @CacheEvict(value = {"inventory", "inventoryList"}, allEntries = true)
     public Inventory updateInventory(Long id, @NotNull Inventory inventoryDetails) {
         Inventory inventory = inventoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(INVENTORY_NOT_FOUND, INVENTORY_NOT_FOUND_DESC + id));
@@ -143,6 +152,7 @@ public class InventoryService {
     }
 
     // Not exposed in controller - Inventory should only be changed by Inventory Summary
+    @CacheEvict(value = {"inventory", "inventoryList"}, allEntries = true)
     public Inventory deleteInventory(Long id) {
         Inventory inventory = inventoryRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(INVENTORY_NOT_FOUND, INVENTORY_NOT_FOUND_DESC + id));

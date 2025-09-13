@@ -6,6 +6,8 @@ import com.retailpulse.repository.ProductRepository;
 import com.retailpulse.service.exception.BusinessException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,7 @@ public class ProductService {
         this.inventoryService = inventoryService;
     }
 
+    @Cacheable(value = "productList", key = "'all'", sync = true)
     public List<ProductResponseDto> getAllProducts() {
         return productRepository.findAll().stream()
                 .map(product -> new ProductResponseDto(
@@ -52,6 +55,7 @@ public class ProductService {
                 .toList();
     }
 
+    @Cacheable(value = "product", key = "#id", sync = true)
     public ProductResponseDto getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(PRODUCT_BY_ID_NOT_FOUND, PRODUCT_BY_ID_NOT_FOUND_DESC + id));
@@ -72,6 +76,7 @@ public class ProductService {
         );
     }
 
+    @Cacheable(value = "product", key = "'bySKU:' + #sku", sync = true)
     public ProductResponseDto getProductBySKU(String sku) {
         Product product = productRepository.findBySku(sku)
                 .orElseThrow(() -> new BusinessException(PRODUCT_BY_SKU_NOT_FOUND, PRODUCT_BY_SKU_NOT_FOUND_DESC + sku));
@@ -92,6 +97,7 @@ public class ProductService {
         );
     }
 
+    @CacheEvict(value = {"product", "productList"}, allEntries = true)
     @Transactional
     public ProductResponseDto saveProduct(@NotNull Product product) {
         if (product.getRrp() < 0) {
@@ -117,6 +123,7 @@ public class ProductService {
         );
     }
 
+    @CacheEvict(value = {"product", "productList"}, allEntries = true)
     public ProductResponseDto updateProduct(Long id, Product productDetails) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_DESC + id));
@@ -168,6 +175,7 @@ public class ProductService {
         updater.accept(newValue);
     }
 
+    @CacheEvict(value = {"product", "productList"}, allEntries = true)
     public Product softDeleteProduct(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_DESC + id));
@@ -183,6 +191,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @CacheEvict(value = {"product", "productList"}, allEntries = true)
     public ProductResponseDto reverseSoftDelete(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(PRODUCT_NOT_FOUND_DESC + id));

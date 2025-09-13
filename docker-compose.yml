@@ -20,7 +20,7 @@ services:
     networks:
       - retailpulse-network
 
-  # app:
+  # rp-inventory-app:
   #   image: rp-inventory-app:v0.1.0
   #   container_name: app-rp-inventory
   #   build:
@@ -41,6 +41,15 @@ services:
   #     #   condition: service_started
   #   networks:
   #     - retailpulse-network
+
+  redis:
+    image: redis:7
+    container_name: redis-rp-inventory
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - retailpulse-network
 
 networks:
   retailpulse-network:

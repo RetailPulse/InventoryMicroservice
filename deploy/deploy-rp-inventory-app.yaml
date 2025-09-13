@@ -6,7 +6,7 @@ metadata:
 data:
   application.yaml: |
     server:
-      port: 8085
+      port: 8084
 
     auth:
       enabled: true
@@ -29,8 +29,15 @@ data:
         database-platform: org.hibernate.dialect.MySQL8Dialect
         show-sql: true
     
-    businessentity-service:
-      url: http://svc-rp-businessentity:8082
+      cache:
+          type: redis
+  
+      data:
+        redis:
+          host: redis-rp-inventory
+          port: 6379
+          password: ${REDIS_PASSWORD}
+          timeout: 60000
 
     logging:
       level:
@@ -41,6 +48,9 @@ data:
         com.retailpulse: DEBUG
       file:
         name: logs/rp-inventory.log
+    
+    businessentity-service:
+      url: http://svc-rp-businessentity:8082
 
 ---
 
@@ -62,13 +72,18 @@ spec:
         app: deploy-rp-inventory
     spec:
       containers:
-        - image: docker.io/casperyap/rp-inventory-app:v0.1.0
-          #        - image: rp-inventory-service:v0.1.0
-          name: myapp
-          volumeMounts:
-            - name: config-volume
-              mountPath: /app/config
-          resources: { }
+      - image: docker.io/galvinlwy/rp-inventory-app-local:v0.1.0
+        name: myapp
+        env:
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: secret-redis
+                key: REDIS_PASSWORD
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        resources: {}
       volumes:
         - name: config-volume
           configMap:
@@ -84,11 +99,11 @@ metadata:
   name: svc-rp-inventory
   namespace: ns-retailpulse
 spec:
-  ports:
-    - port: 8085
-      protocol: TCP
-      targetPort: 8085
-      nodePort: 30085
   selector:
     app: deploy-rp-inventory
+  ports:
+  - port: 8084
+    protocol: TCP
+    targetPort: 8084
+    nodePort: 30084
   type: NodePort
