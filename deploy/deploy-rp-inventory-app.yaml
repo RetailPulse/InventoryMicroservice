@@ -9,7 +9,7 @@ data:
       port: 8085
 
     auth:
-      enabled: false
+      enabled: true
       origin: "http://localhost:4200"
       jwt:
         key:
@@ -50,7 +50,7 @@ metadata:
   name: deploy-rp-inventory
   namespace: ns-retailpulse
   labels:
-    app: deploy-rp-inventory  
+    app: deploy-rp-inventory
 spec:
   replicas: 1
   selector:
@@ -62,17 +62,17 @@ spec:
         app: deploy-rp-inventory
     spec:
       containers:
-      - image: docker.io/casperyap/rp-inventory-app:v0.1.0
-#      - image: rp-inventory-service:v0.1.0
-        name: myapp
-        volumeMounts:
-        - name: config-volume
-          mountPath: /app/config
-        resources: {}
+        - image: docker.io/casperyap/rp-inventory-app:v0.1.0
+          #        - image: rp-inventory-service:v0.1.0
+          name: myapp
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
+          resources: { }
       volumes:
-      - name: config-volume
-        configMap:
-          name: cm-rp-inventory-app
+        - name: config-volume
+          configMap:
+            name: cm-rp-inventory-app
 
 ---
 
@@ -85,10 +85,10 @@ metadata:
   namespace: ns-retailpulse
 spec:
   ports:
-  - port: 8085
-    protocol: TCP
-    targetPort: 8085
-    nodePort: 30085
+    - port: 8085
+      protocol: TCP
+      targetPort: 8085
+      nodePort: 30085
   selector:
     app: deploy-rp-inventory
   type: NodePort
