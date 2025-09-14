@@ -59,6 +59,7 @@ services:
 networks:
   retailpulse-network:
     driver: bridge
+    external: true
 
 volumes:
   mysql_inventory_vol:
