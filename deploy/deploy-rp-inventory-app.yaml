@@ -73,7 +73,8 @@ spec:
     spec:
       containers:
       - image: docker.io/casperyap/rp-inventory-app:v0.1.0
-        name: myapp
+        name: rp-inventory-app
+        imagePullPolicy: Always
         env:
           - name: REDIS_PASSWORD
             valueFrom:

@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.5</version>
+        <version>3.5.4</version>
         <relativePath/>
     </parent>
 
@@ -15,6 +15,19 @@
     <version>2.0.0-SNAPSHOT</version>
     <name>retailpulse-InventoryMicroservice</name>
     <description>Microservice to handle inventory and product operations.</description>
+
+    <!-- Add this dependency management section -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2025.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <properties>
         <java.version>23</java.version>
@@ -225,17 +238,5 @@
         </dependency>
 
     </dependencies>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>2024.0.1</version> <!-- Use a version compatible with Spring Boot 3.4.x -->
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
 </project>
