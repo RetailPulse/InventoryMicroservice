@@ -1,5 +1,6 @@
 package com.retailpulse.service;
 
+import java.util.logging.Logger;
 import com.retailpulse.dto.request.InventoryUpdateRequestDto;
 import com.retailpulse.dto.response.InventoryResponseDto;
 import com.retailpulse.entity.Inventory;
@@ -17,6 +18,8 @@ import java.util.function.Consumer;
 
 @Service
 public class InventoryService {
+    private static final Logger logger = Logger.getLogger(InventoryService.class.getName());
+
     private static final String INVENTORY_NOT_FOUND = "INVENTORY_NOT_FOUND";
     private static final String INVENTORY_BY_PRODUCT_AND_BUSINESS_ENTITY_NOT_FOUND = "INVENTORY_BY_PRODUCT_AND_BUSINESS_ENTITY_NOT_FOUND";
     private static final String INVENTORY_NOT_FOUND_DESC = "Inventory not found with id: ";
@@ -167,38 +170,49 @@ public class InventoryService {
     @Transactional
     public void salesUpdateStocks(@NotNull InventoryUpdateRequestDto request) {
         Long businessEntityId = request.businessEntityId();
+        logger.info("Starting salesUpdateStocks for businessEntityId: " + businessEntityId);
 
         if (!businessEntityService.isValidBusinessEntity(businessEntityId)) {
-            throw new BusinessException(INVALID_BUSINESS_ENTITY, INVALID_BUSINESS_ENTITY_DESC + businessEntityId);
+          logger.warning("Invalid business entity: " + businessEntityId);
+          throw new BusinessException(INVALID_BUSINESS_ENTITY, INVALID_BUSINESS_ENTITY_DESC + businessEntityId);
         }
 
         List<InventoryUpdateRequestDto.InventoryItem> failedItems = new java.util.ArrayList<>();
         for (InventoryUpdateRequestDto.InventoryItem item : request.items()) {
-            Long productId = item.productId();
-            int quantityToDeduct = item.quantity();
+          Long productId = item.productId();
+          int quantityToDeduct = item.quantity();
+          logger.info("Processing productId: " + productId + ", quantityToDeduct: " + quantityToDeduct);
 
-            Inventory inventory = inventoryRepository.findByProductIdAndBusinessEntityId(productId, businessEntityId)
-                    .orElseThrow(() -> new BusinessException(
-                            INVENTORY_BY_PRODUCT_AND_BUSINESS_ENTITY_NOT_FOUND,
-                            INVENTORY_BY_PRODUCT_AND_BUSINESS_ENTITY_NOT_FOUND_DESC + "(" + productId + ", " + businessEntityId + ")"
-                    ));
+          Inventory inventory = inventoryRepository.findByProductIdAndBusinessEntityId(productId, businessEntityId)
+            .orElseThrow(() -> {
+              logger.warning("Inventory not found for productId: " + productId + ", businessEntityId: " + businessEntityId);
+              return new BusinessException(
+                INVENTORY_BY_PRODUCT_AND_BUSINESS_ENTITY_NOT_FOUND,
+                INVENTORY_BY_PRODUCT_AND_BUSINESS_ENTITY_NOT_FOUND_DESC + "(" + productId + ", " + businessEntityId + ")"
+              );
+            });
 
-            int currentQuantity = inventory.getQuantity();
-            
-            if (currentQuantity < quantityToDeduct) {
-                failedItems.add(item);                
-            }
-
-            inventory.setQuantity(currentQuantity - quantityToDeduct); //quantityToDeduct can be negative for returns
+          int currentQuantity = inventory.getQuantity();
+          
+          if (currentQuantity < quantityToDeduct) {
+            logger.warning("Insufficient stock for productId: " + productId + ". Available: " + currentQuantity + ", Requested: " + quantityToDeduct);
+            failedItems.add(item);
+          } else {
+            int newQuantity = currentQuantity - quantityToDeduct;
+            inventory.setQuantity(newQuantity);
+            logger.info("Updated inventory quantity for productId: " + productId + " to " + newQuantity);
             inventoryRepository.save(inventory);
+          }
         }
 
         if (!failedItems.isEmpty()) {
-            String failedProducts = failedItems.stream()
-                    .map(i -> String.valueOf(i.productId()))
-                    .reduce((a, b) -> a + ", " + b)
-                    .orElse("");
-            throw new BusinessException("INSUFFICIENT_STOCK", "Insufficient stock for products: " + failedProducts);
+          String failedProducts = failedItems.stream()
+            .map(i -> String.valueOf(i.productId()))
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("");
+          logger.warning("Throwing BusinessException for insufficient stock on products: " + failedProducts);
+          throw new BusinessException("INSUFFICIENT_STOCK", "Insufficient stock for products: " + failedProducts);
         }
+      logger.info("salesUpdateStocks completed successfully for businessEntityId: " + businessEntityId);
     }
 }

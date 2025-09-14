@@ -1,8 +1,11 @@
 package com.retailpulse.service;
 
+import com.retailpulse.dto.request.InventoryUpdateRequestDto;
 import com.retailpulse.dto.response.InventoryResponseDto;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.repository.InventoryRepository;
+import com.retailpulse.service.exception.BusinessException;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -299,5 +302,61 @@ class InventoryServiceTest {
         verify(inventoryRepository, times(1)).findById(inventoryId);
         verify(inventoryRepository, times(1)).delete(inventoryToDelete);
         verifyNoMoreInteractions(inventoryRepository);
+    }
+
+    @Test
+    void testSalesUpdateStocks_successfulDeduction() {
+        long businessEntityId = 1L;
+        long productId = 100L;
+
+        Inventory inventory = new Inventory();
+        inventory.setId(1L);
+        inventory.setProductId(productId);
+        inventory.setBusinessEntityId(businessEntityId);
+        inventory.setQuantity(50);
+
+        InventoryUpdateRequestDto.InventoryItem item = new InventoryUpdateRequestDto.InventoryItem(productId, 10);
+        InventoryUpdateRequestDto request = new InventoryUpdateRequestDto(businessEntityId, List.of(item));
+
+        when(businessEntityService.isValidBusinessEntity(businessEntityId)).thenReturn(true);
+        when(inventoryRepository.findByProductIdAndBusinessEntityId(productId, businessEntityId)).thenReturn(Optional.of(inventory));
+
+        inventoryService.salesUpdateStocks(request);
+
+        assertEquals(40, inventory.getQuantity());
+        verify(inventoryRepository).save(inventory);
+    }
+
+    @Test
+    void testSalesUpdateStocks_insufficientStock_throwsException() {
+        long businessEntityId = 1L;
+        long productId = 100L;
+
+        Inventory inventory = new Inventory();
+        inventory.setId(1L);
+        inventory.setProductId(productId);
+        inventory.setBusinessEntityId(businessEntityId);
+        inventory.setQuantity(5);
+
+        InventoryUpdateRequestDto.InventoryItem item = new InventoryUpdateRequestDto.InventoryItem(productId, 10);
+        InventoryUpdateRequestDto request = new InventoryUpdateRequestDto(businessEntityId, List.of(item));
+
+        when(businessEntityService.isValidBusinessEntity(businessEntityId)).thenReturn(true);
+        when(inventoryRepository.findByProductIdAndBusinessEntityId(productId, businessEntityId)).thenReturn(Optional.of(inventory));
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> inventoryService.salesUpdateStocks(request));
+        assertEquals("INSUFFICIENT_STOCK", ex.getCode());
+        verify(inventoryRepository, never()).save(any());
+    }
+
+    @Test
+    void testSalesUpdateStocks_invalidBusinessEntity_throwsException() {
+        long businessEntityId = 99L;
+        InventoryUpdateRequestDto request = new InventoryUpdateRequestDto(businessEntityId, List.of());
+
+        when(businessEntityService.isValidBusinessEntity(businessEntityId)).thenReturn(false);
+
+        BusinessException ex = assertThrows(BusinessException.class, () -> inventoryService.salesUpdateStocks(request));
+        assertEquals("INVALID_BUSINESS_ENTITY", ex.getCode());
     }
 }
