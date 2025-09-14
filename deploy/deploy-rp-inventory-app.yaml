@@ -9,7 +9,7 @@ data:
       port: 8084
 
     auth:
-      enabled: false
+      enabled: true
       origin: "http://localhost:4200"
       jwt:
         key:
@@ -60,7 +60,7 @@ metadata:
   name: deploy-rp-inventory
   namespace: ns-retailpulse
   labels:
-    app: deploy-rp-inventory  
+    app: deploy-rp-inventory
 spec:
   replicas: 1
   selector:
@@ -85,9 +85,9 @@ spec:
           mountPath: /app/config
         resources: {}
       volumes:
-      - name: config-volume
-        configMap:
-          name: cm-rp-inventory-app
+        - name: config-volume
+          configMap:
+            name: cm-rp-inventory-app
 
 ---
 
