@@ -1,5 +1,6 @@
 package com.retailpulse.service;
 
+import com.retailpulse.dto.request.InventoryUpdateRequestDto;
 import com.retailpulse.dto.response.InventoryResponseDto;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.repository.InventoryRepository;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -159,5 +161,44 @@ public class InventoryService {
 
         inventoryRepository.delete(inventory);
         return inventory;
+    }
+
+    @CacheEvict(value = {"inventory", "inventoryList"}, allEntries = true)
+    @Transactional
+    public void salesUpdateStocks(@NotNull InventoryUpdateRequestDto request) {
+        Long businessEntityId = request.businessEntityId();
+
+        if (!businessEntityService.isValidBusinessEntity(businessEntityId)) {
+            throw new BusinessException(INVALID_BUSINESS_ENTITY, INVALID_BUSINESS_ENTITY_DESC + businessEntityId);
+        }
+
+        List<InventoryUpdateRequestDto.InventoryItem> failedItems = new java.util.ArrayList<>();
+        for (InventoryUpdateRequestDto.InventoryItem item : request.items()) {
+            Long productId = item.productId();
+            int quantityToDeduct = item.quantity();
+
+            Inventory inventory = inventoryRepository.findByProductIdAndBusinessEntityId(productId, businessEntityId)
+                    .orElseThrow(() -> new BusinessException(
+                            INVENTORY_BY_PRODUCT_AND_BUSINESS_ENTITY_NOT_FOUND,
+                            INVENTORY_BY_PRODUCT_AND_BUSINESS_ENTITY_NOT_FOUND_DESC + "(" + productId + ", " + businessEntityId + ")"
+                    ));
+
+            int currentQuantity = inventory.getQuantity();
+            
+            if (currentQuantity < quantityToDeduct) {
+                failedItems.add(item);                
+            }
+
+            inventory.setQuantity(currentQuantity - quantityToDeduct); //quantityToDeduct can be negative for returns
+            inventoryRepository.save(inventory);
+        }
+
+        if (!failedItems.isEmpty()) {
+            String failedProducts = failedItems.stream()
+                    .map(i -> String.valueOf(i.productId()))
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("");
+            throw new BusinessException("INSUFFICIENT_STOCK", "Insufficient stock for products: " + failedProducts);
+        }
     }
 }
