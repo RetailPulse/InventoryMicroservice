@@ -9,8 +9,8 @@ data:
       port: 8084
 
     auth:
-      enabled: true
-      origin: "http://localhost:4200"
+      enabled: false
+      origin: "http://localhost:30080" # "http://localhost:4200"
       jwt:
         key:
           set:
@@ -72,8 +72,9 @@ spec:
         app: deploy-rp-inventory
     spec:
       containers:
-      - image: docker.io/galvinlwy/rp-inventory-app-local:v0.1.0
-        name: myapp
+      - image: docker.io/casperyap/rp-inventory-app:v0.1.0
+        name: rp-inventory-app
+        imagePullPolicy: Always
         env:
           - name: REDIS_PASSWORD
             valueFrom:

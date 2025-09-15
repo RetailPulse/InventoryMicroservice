@@ -1,4 +1,4 @@
-server.port: 8085
+server.port: 8084
 
 auth:
   enabled: true
@@ -24,6 +24,16 @@ spring:
 
 businessentity-service:
   url: http://localhost:30082
+
+cache:
+    type: redis
+
+data:
+  redis:
+    host: localhost
+    port: 6379
+    password: redis-password-inventory
+    timeout: 60000
 
 logging:
   level:
