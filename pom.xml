@@ -16,7 +16,6 @@
     <name>retailpulse-InventoryMicroservice</name>
     <description>Microservice to handle inventory and product operations.</description>
 
-    <!-- Add this dependency management section -->
     <dependencyManagement>
         <dependencies>
             <dependency>
