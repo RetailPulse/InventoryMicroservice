@@ -10,7 +10,7 @@ data:
 
     auth:
       enabled: false
-      origin: "http://localhost:4200"
+      origin: "http://localhost:30080" # "http://localhost:4200"
       jwt:
         key:
           set:
@@ -60,7 +60,7 @@ metadata:
   name: deploy-rp-inventory
   namespace: ns-retailpulse
   labels:
-    app: deploy-rp-inventory  
+    app: deploy-rp-inventory
 spec:
   replicas: 1
   selector:
@@ -73,7 +73,8 @@ spec:
     spec:
       containers:
       - image: docker.io/casperyap/rp-inventory-app:v0.1.0
-        name: myapp
+        name: rp-inventory-app
+        imagePullPolicy: Always
         env:
           - name: REDIS_PASSWORD
             valueFrom:
@@ -85,9 +86,9 @@ spec:
           mountPath: /app/config
         resources: {}
       volumes:
-      - name: config-volume
-        configMap:
-          name: cm-rp-inventory-app
+        - name: config-volume
+          configMap:
+            name: cm-rp-inventory-app
 
 ---
 
