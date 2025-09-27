@@ -10,7 +10,7 @@ data:
 
     auth:
       enabled: false
-      origin: "http://localhost:30080" # "http://localhost:4200"
+      origin: "http://localhost:30080" # "http://localhost:4200" #
       jwt:
         key:
           set:
@@ -71,10 +71,52 @@ spec:
       labels:
         app: deploy-rp-inventory
     spec:
+      initContainers:
+        # Wait for MySQL Service to be reachable
+        - name: wait-for-mysql
+          image: busybox:1.35
+          command:
+            - sh
+            - -c
+            - >
+              until nc -z mysql-rp-inventory 3306; do
+                echo "Waiting for MySQL at mysql-rp-inventory:3306...";
+                sleep 5;
+              done;
+              echo "MySQL is ready!";
+          env:
+            - name: MYSQL_HOST
+              value: mysql-rp-inventory
+            - name: MYSQL_PORT
+              value: "3306"
+
+        # Wait for Redis Service to be reachable
+        - name: wait-for-redis
+          image: redis:7.2 # Use redis image for redis-cli
+          command:
+            - sh
+            - -c
+            - >
+              until redis-cli -h redis-rp-inventory -p 6379 -a $$REDIS_PASSWORD ping; do
+                echo "Waiting for Redis at redis-rp-inventory:6379...";
+                sleep 5;
+              done;
+              echo "Redis is ready!";
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-redis
+                  key: REDIS_PASSWORD
+            - name: REDIS_HOST
+              value: redis-rp-inventory
+            - name: REDIS_PORT
+              value: "6379"
+
       containers:
-      - image: docker.io/casperyap/rp-inventory-app:v0.1.0
+      - image: rp-inventory-app:v0.1.0 #docker.io/casperyap/
         name: rp-inventory-app
-        imagePullPolicy: Always
+        imagePullPolicy: Never # Always
         env:
           - name: REDIS_PASSWORD
             valueFrom:
