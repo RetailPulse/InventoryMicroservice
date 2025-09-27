@@ -1,21 +1,23 @@
 package com.retailpulse.service;
 
-import com.retailpulse.dto.response.InventoryResponseDto;
-import com.retailpulse.dto.response.InventoryTransactionProductResponseDto;
-import com.retailpulse.dto.response.InventoryTransactionResponseDto;
-import com.retailpulse.dto.response.ProductResponseDto;
+import com.retailpulse.dto.request.TimeSearchFilterRequestDto;
+import com.retailpulse.dto.response.*;
 import com.retailpulse.entity.Inventory;
 import com.retailpulse.entity.InventoryTransaction;
 import com.retailpulse.repository.InventoryTransactionRepository;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryTransactionService {
@@ -44,6 +46,69 @@ public class InventoryTransactionService {
                         InventoryTransactionProduct.product()
                 ))
                 .toList();
+    }
+
+    public List<InventoryTransactionProductBusinessEntityResponseDto> getAllInventoryTransactionWithProductAndBusinessEntity(TimeSearchFilterRequestDto filter) {
+        if (filter == null) {
+          throw new IllegalArgumentException("TimeSearchFilterRequestDto cannot be null");
+        }
+        Instant startDateTime = filter.startDateTime();
+        Instant endDateTime = filter.endDateTime();
+        
+        // Fetch transactions with product
+        List<InventoryTransactionProductResponseDto> inventoryTransactions = inventoryTransactionRepository.findAllWithProductAndTime(startDateTime, endDateTime).stream()
+            .map(InventoryTransactionProduct -> new InventoryTransactionProductResponseDto(
+                    InventoryTransactionProduct.inventoryTransaction(),
+                    InventoryTransactionProduct.product()
+            ))
+            .toList();
+
+        List<InventoryTransactionProductBusinessEntityResponseDto> result = new ArrayList<>();
+        if (inventoryTransactions.isEmpty()) {
+            return result;
+        }
+
+        // Fetch all business entities and index by id for quick lookup
+        List<BusinessEntityResponseDto> businessEntities = businessEntityService.allBusinessEntityResponseDetails();
+        if (businessEntities == null || businessEntities.isEmpty()) {
+            // No business entity details available; return transactions with null source/destination
+            for (InventoryTransactionProductResponseDto tx : inventoryTransactions) {
+                result.add(new InventoryTransactionProductBusinessEntityResponseDto(
+                        tx.inventoryTransaction(),
+                        tx.product(),
+                        null,
+                        null
+                ));
+            }
+            return result;
+        }
+
+        Map<Long, BusinessEntityResponseDto> beById = businessEntities.stream()
+                .collect(Collectors.toMap(be -> {
+                    // attempt to handle both Long and long id methods
+                    try {
+                        return be.id();
+                    } catch (Exception e) {
+                        return Long.valueOf(0);
+                    }
+                }, be -> be));
+
+        for (InventoryTransactionProductResponseDto tx : inventoryTransactions) {
+            InventoryTransaction invTx = tx.inventoryTransaction();
+            Long sourceId = invTx.getSource();
+            Long destinationId = invTx.getDestination();
+            BusinessEntityResponseDto sourceBe = beById.get(sourceId);
+            BusinessEntityResponseDto destinationBe = beById.get(destinationId);
+
+            result.add(new InventoryTransactionProductBusinessEntityResponseDto(
+                    invTx,
+                    tx.product(),
+                    sourceBe,
+                    destinationBe
+            ));
+        }
+
+        return result;
     }
 
     @CacheEvict(value = {"inventoryTransactionProductList", "inventoryTransactionList"}, allEntries = true)
