@@ -20,31 +20,36 @@ services:
     networks:
       - retailpulse-network
 
-  # rp-inventory-app:
-  #   image: rp-inventory-app:v0.1.0
-  #   container_name: app-rp-inventory
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   environment:
-  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql-rp-inventory:3306/RPInventoryDB
-  #     SPRING_DATASOURCE_USERNAME: root
-  #     SPRING_DATASOURCE_PASSWORD: password
-  #     SERVER_PORT: 8085
-  #     AUTH_SERVER_URL: http://app-iam:8081
-  #   ports:
-  #     - "8085:8085"
-  #   depends_on:
-  #     mysql-rp-inventory:
-  #       condition: service_healthy
-  #     # app-iam:
-  #     #   condition: service_started
-  #   networks:
-  #     - retailpulse-network
+  rp-inventory-app:
+    image: rp-inventory-app:v0.1.0
+    container_name: app-rp-inventory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-rp-inventory:3306/RPInventoryDB
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_REDIS_HOST: redis-rp-inventory
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: redis-password-inventory
+      SERVER_PORT: 8084
+      AUTH_SERVER_URL: http://app-iam:8081
+    ports:
+      - "8084:8084"
+    depends_on:
+      mysql-rp-inventory:
+        condition: service_healthy
+      # app-iam:
+      #   condition: service_started
+    networks:
+      - retailpulse-network
 
   redis:
-    image: redis:7
+    image: redis:7.2
     container_name: redis-rp-inventory
+    command: ["redis-server", "--requirepass", "redis-password-inventory"]
     restart: always
     ports:
       - "6379:6379"
@@ -54,6 +59,7 @@ services:
 networks:
   retailpulse-network:
     driver: bridge
+    external: true
 
 volumes:
   mysql_inventory_vol:
