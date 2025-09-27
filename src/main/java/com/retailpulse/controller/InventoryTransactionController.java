@@ -1,5 +1,7 @@
 package com.retailpulse.controller;
 
+import com.retailpulse.dto.request.TimeSearchFilterRequestDto;
+import com.retailpulse.dto.response.InventoryTransactionProductBusinessEntityResponseDto;
 import com.retailpulse.dto.response.InventoryTransactionProductResponseDto;
 import com.retailpulse.dto.response.InventoryTransactionResponseDto;
 import com.retailpulse.entity.InventoryTransaction;
@@ -27,6 +29,12 @@ public class InventoryTransactionController {
     public ResponseEntity<List<InventoryTransactionProductResponseDto>> getAllInventoryTransactionWithProduct() {
         logger.info("Fetching all inventory transactions");
         return ResponseEntity.ok(inventoryTransactionService.getAllInventoryTransactionWithProduct());
+    }
+
+    @PostMapping("/withBusinessEntityDetails")
+    public ResponseEntity<List<InventoryTransactionProductBusinessEntityResponseDto>> getAllInventoryTransactionWithProductAndBusinessEntity(@RequestBody TimeSearchFilterRequestDto searchFilters) {
+        logger.info("Fetching all inventory transactions with business entity details");
+        return ResponseEntity.ok(inventoryTransactionService.getAllInventoryTransactionWithProductAndBusinessEntity(searchFilters));
     }
 
     @PostMapping
