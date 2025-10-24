@@ -10,14 +10,17 @@ on:
 
   push:
     branches:
-      - "main" # Trigger on pushes to the "main" branch
+      - develop
+      - main
+
   pull_request:
-     branches:
-       - "main" # Trigger on pull requests targeting the "main" branch
-     types:
-       - opened
-  #     - synchronize
-  #     - reopened
+    branches:
+      - develop
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   backend-unit-test:
