@@ -8,7 +8,7 @@ auth:
 
 spring:  
   datasource:
-    url: jdbc:mysql://localhost:3316/RPInventoryDB
+    url: jdbc:mysql://localhost:30308/RPInventoryDB
     username: root
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
