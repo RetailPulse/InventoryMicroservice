@@ -18,6 +18,9 @@
 --
 -- Table structure for table `inventory`
 --
+CREATE DATABASE IF NOT EXISTS RPInventoryDB;
+
+USE RPInventoryDB;
 
 DROP TABLE IF EXISTS `inventory`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
